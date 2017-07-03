@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, width=device-width">
+	<link rel="stylesheet" type="text/css" href="css/app.css">
+	<link rel="stylesheet" type="text/css" href="css/iconfont.css">
+	<title>花卷团购网</title>
+</head>
+<body>
+<!-- 定义容器元素 -->
+<div id="app">
+	<div class="header">
+		<div class="nav">
+			<div class="go-back" v-on:click="goBack"><span class="arrow"></span><span class="arrow green"></span></div>
+			<div class="login"><i class="iconfont icon-category"></i></div>
+			<h1>花卷团购网</h1>
+		</div>
+		<div class="search" v-show="isShowSeach"><input type="text" placeholder="请输入搜索关键字" v-model="search" v-on:keydown.enter="goSeach"></div>
+	</div>
+	<!-- 通过compoent渲染多个元素 -->
+	<compoent v-bind:comp-search="sendSeach" v-bind:is="view"></compoent>
+</div>
+<!-- 模板标签定义首页模板 -->
+<script type="text/template" id="tpl_home">
+	<section id="home" class="home">
+		<div class="btnbg">
+		<ul class="type-btns clearfix" id="btnbg">
+			<li v-for="item in types">
+				<a v-bind:href="'#/list/type/' + item.id">
+					<img v-bind:src="'img/icon/' + item.url" alt="">
+					<p>{{item.title}}</p>
+				</a>
+			</li>
+		</ul>
+		<div class="circles"><span class="circle"></span><span class="circle"></span>
+		</div>
+		</div>
+		<!-- 定义新闻-->
+		<div class="news_part clearfix"><div class="news_left"><span>商圈</span><span class="toutiao">头条</span>
+		    </div>
+           <ul class="news_right" id="news_huxi">
+               <li v-for="item in news" class="news1">
+                  <span class="type">{{item.type}}</span>
+                  <span class="text">{{item.title}}</span>
+               </li>
+           </ul>
+		</div>
+		<!-- 定义广告部分 三个广告部分 -->
+		<ul class="ad clearfix">
+		<li v-for="item in ad">
+				<a v-bind:href="'#/detail/' + item.id">
+					<h3>{{item.title}}</h3>
+		 			<p>{{item.description}}</p>
+					<img v-bind:src="'img/ad/' + item.url" alt="">
+		 		</a>
+			</li>
+		 </ul>
+		 <!--定义滑动商品列表-->
+		<div class="movead-container">
+		<ul class="move-ad clearfix">
+            <li v-for="item in movead" class="moveli"><a v-bind:href="'#/detail/'+item.id"><img v-bind:src="item.url"></a><p class="ad-tip">{{item.description}}</p></li>
+		</ul>
+		</div>
+		<!-- 定义商品列表 -->
+		<ul class="list-part">
+			<li class="clearfix" v-for="item in list">
+				<a v-bind:href="'#/detail/' + item.id">
+					<img v-bind:src="'img/list/' + item.img" alt="">
+					<div class="text-content">
+						<h3>{{item.title}}</h3>
+						<p>
+							<span class="price">{{item.price | itemPrice}}</span>
+							<span class="origin">{{item.orignPrice | itemOrigin}}</span>
+							<span class="sale">{{item.sales | itemSale}}</span>
+						</p>
+					</div>
+				</a>
+			</li>
+		</ul>
+	</section>
+</script>
+<script type="text/template" id="tpl_list">
+	<section class="list" id="list">
+		<ul class="clearfix order">
+			<li v-for="item in orders" data-id="{{item.id}}" v-on:click="productSortBy(item.id)">
+				<span>{{item.text}}</span>
+				<span class="arrow"></span>
+			</li>
+		</ul>
+		<!-- 定义商品列表 -->
+		<ul class="list-part">
+			<li class="clearfix" v-for="item in list | filterBy compSearch">
+				<a v-bind:href="'#/detail/' + item.id">
+					<img v-bind:src="'img/list/' + item.img" alt="">
+					<div class="text-content">
+						<h3>{{item.title}}</h3>
+						<p>
+							<span class="price">{{item.price | itemPrice}}</span>
+							<span class="origin">{{item.orignPrice | itemOrigin}}</span>
+							<span class="sale">{{item.sales | itemSale}}</span>
+						</p>
+					</div>
+				</a>
+			</li>
+		</ul>
+		<!-- 加载更多按钮 -->
+		<div class="load-more" v-show="other.length" v-on:click="loadMore">
+			<span>查看剩余{{other.length}}条团购</span>
+			<span class="arrow"><span class="arrow green"></span></span>
+		</div>
+	</section>
+</script>
+<!-- 定义详情页模板 -->
+<script type="text/template" id="tpl_detail">
+	<section class="detail" id="detail">
+		<div class="product">
+			<img v-if="detail.src" v-bind:src="'img/item/' + detail.src" alt="">
+			<h1>{{detail.title}}</h1>
+			<p>{{detail.description}}</p>
+		</div>
+		<div class="buy">
+			<span class="price"><strong>{{detail.price}}</strong>元</span>
+			<span class="origin">{{detail.orignPrice | itemOrigin}}</span>
+			<span class="go-to-buy">立即购买</span>
+		</div>
+		<ul class="sale clearfix">
+			<li>支持自动退货</li>
+			<li>支持随时退货</li>
+			<li>{{detail.sales | itemSale}}</li>
+		</ul>
+		<div class="part store">
+			<h3 class="sub-title">店家信息</h3>
+			<div class="container">
+				<p>{{detail.storeName}}</p>
+				<p>{{detail.storeAddress}}</p>
+			</div>
+			<div class="footer">查看{{detail.storeNum}}家分店</div>
+		</div>
+		<div class="part notice">
+			<h3 class="sub-title">购买须知</h3>
+			<div class="container">
+				<h3>有效期</h3>
+				<p>{{detail.validateTime}}</p>
+				<h3>使用时间</h3>
+				<p>{{detail.useTime}}</p>
+				<h3>使用规则</h3>
+				<p v-for="item in detail.rules">{{item}}</p>
+			</div>
+		</div>
+		<div class="comment">
+           <div class="cohead">
+              <a href="#/comment">
+				<span class="title">评价</span>
+				<span class="total">({{all.length}})</span>
+				<span class="score">{{detail.evaluate}}</span>
+				<span class="arrow"></span>
+			  </a>
+           </div>
+		    <ul class="comment-list">
+		    	<li class="com-li" v-for="item in comment">
+		    		<div class="comment-head  clearfix">
+		    			<div class="avatar">
+		    				<img v-bind:src="item.avatar">
+		    			</div>
+		    			<div class="comment-user">
+			    			<div class="comment-name">{{item.name}}</div>
+			    			<div class="date">{{item.time}}</div>
+			    		</div>
+		    		</div>
+		    		<div class="comment-footer">
+		    		    <div class="comment-text">{{item.comment}}</div>
+		    			<span class="comment-from">{{item.from}}</span>
+		    		</div>
+		    	</li>
+		    </ul>
+		    <div class="more"><a v-bind:href="'#/comment'">查看全部{{all.length}}条评价</a><span class="arrow"></span></div>
+		</div>
+	</section>
+</script>
+<script type="text/template" id="tpl_comment">
+	<section>
+         <div class="comment">
+           <div class="cohead">
+				<span class="title">评价</span>
+				<span class="total">({{comment.length}})</span>
+				<span class="score">{{detail.evaluate}}</span>
+           </div>
+		    <ul class="comment-list">
+		    	<li class="com-li" v-for="item in comment">
+		    		<div class="comment-head clearfix">
+		    			<div class="avatar">
+		    				<img v-bind:src="item.avatar">
+		    			</div>
+		    			<div class="comment-user">
+			    			<div class="comment-name">{{item.name}}</div>
+			    			<div class="date">{{item.time}}</div>
+			    		</div>
+		    		</div>
+		    	
+		    		<div class="comment-footer">
+		    		    <div class="comment-text">{{item.comment}}</div>
+		    			<span class="comment-from">{{item.from}}</span>
+		    		</div>
+		    	</li>
+		    </ul>
+		</div>
+	</section>
+</script>
+<script type="text/javascript" src="js/zepto.js"></script>
+<script type="text/javascript" src="js/vue1.js"></script>
+<script type="text/javascript" src="js/movebtn.js"></script>
+<script type="text/javascript" src="js/movead.js"></script>
+<script type="text/javascript" src="js/index.js"></script>
+</body>
+</html>
